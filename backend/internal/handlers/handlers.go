@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mishaRomanov/maglev/internal/shared"
@@ -13,7 +14,14 @@ type Handler struct {
 	storage *redis.Client
 }
 
+func New(storage *redis.Client) *Handler {
+	return &Handler{
+		storage: storage,
+	}
+}
+
 // Handles /register endpoint
+// TODO переписать под http формы (?) каким образом буду получать дату (?)
 func (h *Handler) Register(ctx *gin.Context) {
 	var userCreds *shared.UserCreds
 
@@ -40,7 +48,7 @@ func (h *Handler) Register(ctx *gin.Context) {
 		return
 	}
 
-	if redisErr := h.storage.Set(shared.OneMinuteContextTimeOut(), userID, userCreds); redisErr != nil {
+	if redisErr := h.storage.Set(shared.OneMinuteContextTimeOut(), userID, userCreds, time.Hour); redisErr != nil {
 		log.Error("Failed to write data to redis")
 		ctx.JSON(
 			http.StatusInternalServerError,
@@ -55,4 +63,9 @@ func (h *Handler) Register(ctx *gin.Context) {
 		shared.UserID{
 			Userid: userID,
 		})
+}
+
+func (h *Handler) MainPage(ctx *gin.Context) {
+	//TODO заменить на пашин html
+	ctx.String(http.StatusOK, "Hello from a main page!")
 }
